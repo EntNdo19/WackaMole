@@ -1,0 +1,35 @@
+{
+    "version": 1,
+    "name": "InputActon",
+    "maps": [
+        {
+            "name": "XR",
+            "id": "8744297e-0095-47ae-9683-60ad4b4fe0f9",
+            "actions": [
+                {
+                    "name": "Secondary",
+                    "type": "Button",
+                    "id": "84826b9f-d50a-43d2-86da-65d779b7a51d",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "4b0ecdf6-d2ad-4c17-a9cb-be91e3c14b3c",
+                    "path": "<XRController>{RightHand}/secondaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Secondary",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
