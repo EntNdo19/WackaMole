@@ -1,88 +1,70 @@
 using UnityEngine;
-public enum WurmState
+
+public class MoleSpawner : MonoBehaviour
 {
-    Idle,
-    Running,
-    Ended
-}
-[RequireComponent(typeof(Collider))]
-public class WurmController : MonoBehaviour
-{
-    [Header("Movement Settings")]
-    public float popHeight = 1f;          // How high the worm pops up
-    public float moveSpeed = 1f;          // Speed of up/down movement
+    [Header("Prefabs & Spawn Points")]
+    public GameObject molePrefab;
+    public Transform[] spawnPoints;
 
-    [Header("Score Settings")]
-    public int scoreValue = 1;            // Points awarded per hit
+    [Header("Settings")]
+    public float spawnInterval = 2f;
+    public float moleLifetime = 4f;
 
-    [Header("Optional Sound")]
-    public AudioSource hitSound;          // Sound played when hit
-
-    [HideInInspector]
-    public WurmState currentState = WurmState.Idle;
-
-    private Vector3 startPosition;
-    private Vector3 endPosition;
+    private GameManager gameManager;
 
     void Start()
     {
-        startPosition = transform.position;
-        endPosition = startPosition + Vector3.up * popHeight;
+        // Find the GameManager in the scene
+        gameManager = FindObjectOfType<GameManager>();
 
-        // Ensure collider is trigger if using OnTriggerEnter
-        Collider col = GetComponent<Collider>();
-        if (col != null) col.isTrigger = true;
-    }
-
-    void Update()
-    {
-        switch (currentState)
+        if (gameManager == null)
         {
-            case WurmState.Idle:
-            case WurmState.Ended:
-                // Stay hidden
-                transform.position = startPosition;
-                break;
-
-            case WurmState.Running:
-                // Smooth up and down movement
-                float y = Mathf.PingPong(Time.time * moveSpeed, popHeight);
-                transform.position = startPosition + Vector3.up * y;
-                break;
+            Debug.LogError("GameManager not found in the scene!");
+            return;
         }
+
+        // Start spawning moles repeatedly
+        InvokeRepeating(nameof(SpawnMole), 1f, spawnInterval);
     }
 
-    /// <summary>
-    /// Call this when the hammer hits the worm
-    /// </summary>
-    public void Hit()
+    void SpawnMole()
     {
-        if (currentState != WurmState.Running) return;
+        if (!IsGameRunning()) return;
 
-        // Add score
-        ScoreManager.Instance.AddScore(scoreValue);
-
-        // Play hit sound
-        if(hitSound != null) hitSound.Play();
-
-        // Optional: reset worm immediately after hit
-        // transform.position = startPosition;
-
-        Debug.Log($"{gameObject.name} hit! Score +{scoreValue}");
-    }
-
-    /// <summary>
-    /// Detect hammer collision
-    /// Make sure hammer has tag "Hammer"
-    /// </summary>
-    /// <param name="other"></param>
-    private void OnTriggerEnter(Collider other)
-    {
-        if (currentState != WurmState.Running) return;
-
-        if (other.CompareTag("Hammer"))
+        if (spawnPoints.Length == 0)
         {
-            Hit();
+            Debug.LogWarning("No spawn points assigned for moles!");
+            return;
         }
+
+        // Choose a random spawn point
+        int randomIndex = Random.Range(0, spawnPoints.Length);
+        Transform spawnPoint = spawnPoints[randomIndex];
+
+        // Instantiate mole
+        GameObject mole = Instantiate(molePrefab, spawnPoint.position, spawnPoint.rotation, spawnPoint);
+
+        // Reset local position (optional)
+        mole.transform.localPosition = Vector3.zero;
+
+        // Activate mole script
+        Mole moleScript = mole.GetComponent<Mole>();
+        if (moleScript != null)
+        {
+            moleScript.Activate();
+        }
+        else
+        {
+            Debug.LogWarning("Mole prefab does not have a Mole script attached!");
+        }
+
+        // Destroy mole after lifetime
+        Destroy(mole, moleLifetime);
+    }
+
+    bool IsGameRunning()
+    {
+        // Using a public property in GameManager instead of reflection
+        return gameManager != null && gameManager.gameRunning;
     }
 }

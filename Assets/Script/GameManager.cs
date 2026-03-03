@@ -11,7 +11,7 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI timerText;
     public GameObject scoreboardPanel;
 
-    private bool gameRunning = false;
+    public bool gameRunning = false;
 
     void Start()
     {
@@ -39,6 +39,7 @@ public class GameManager : MonoBehaviour
 
         scoreboardPanel.SetActive(true);
         UpdateScoreUI();
+        Debug.Log("Game started");
     }
 
     public void AddScore(int amount)
