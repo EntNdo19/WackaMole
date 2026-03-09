@@ -1,10 +1,15 @@
 using UnityEngine;
+using TMPro;
 
 public class ScoreManager : MonoBehaviour
 {
     public static ScoreManager Instance;   // Singleton
 
-    public int currentScore = 0;           // Current score
+    public int currentScore = 0;
+    public int bestScore = 0;
+
+    public TextMeshProUGUI scoreText;
+    public TextMeshProUGUI bestScoreText;
 
     void Awake()
     {
@@ -12,24 +17,52 @@ public class ScoreManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Optional if you want it to persist between scenes
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
             Destroy(gameObject);
         }
+
+        // Load best score
+        bestScore = PlayerPrefs.GetInt("BestScore", 0);
     }
 
-    // Call this to add points
+    void Start()
+    {
+        UpdateUI();
+    }
+
+    // Add points
     public void AddScore(int amount)
     {
         currentScore += amount;
-        Debug.Log("Score: " + currentScore);
+
+        // Check for new best score
+        if (currentScore > bestScore)
+        {
+            bestScore = currentScore;
+
+            PlayerPrefs.SetInt("BestScore", bestScore);
+            PlayerPrefs.Save();
+        }
+
+        UpdateUI();
     }
 
-    // Call this to reset score at start of round
+    // Reset score at start of round
     public void ResetScore()
     {
         currentScore = 0;
+        UpdateUI();
+    }
+
+    void UpdateUI()
+    {
+        if (scoreText != null)
+            scoreText.text = "Score: " + currentScore;
+
+        if (bestScoreText != null)
+            bestScoreText.text = "Best: " + bestScore;
     }
 }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class VRPauseMenu : MonoBehaviour
 {
@@ -62,9 +63,14 @@ public class VRPauseMenu : MonoBehaviour
         isPaused = false;
     }
 
+    
+    public void RestartGame()
+    {
+        SceneManager.LoadScene("MainGame");
+    }
+    
     public void QuitGame()
     {
-        Time.timeScale = 1f;
-        Application.Quit();
+        SceneManager.LoadScene("StartGame");
     }
 }
