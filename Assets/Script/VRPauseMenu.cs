@@ -64,7 +64,7 @@ public class VRPauseMenu : MonoBehaviour
     public void RestartGame()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("MainGame");
+        SceneManager.LoadScene("HauptSpiel");
     }
 
     public void QuitGame()
