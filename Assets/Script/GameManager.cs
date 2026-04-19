@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.XR;
 
 public class GameManager : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI timerText;
     public TextMeshProUGUI bestScoreText;
     public GameObject scoreboardPanel;
+    public GameObject endGamePanel;
+    public GameObject pausePanel;
 
     [Header("Sound Effects")]
     public AudioSource audioSource;
@@ -24,12 +27,20 @@ public class GameManager : MonoBehaviour
     public AudioClip gameOverSound;
 
     public bool gameRunning = false;
+    private bool isPaused = false;
+    private bool lastSecondaryButtonState = false;
 
     void Start()
     {
-        scoreboardPanel.SetActive(false);
+        if (scoreboardPanel != null)
+            scoreboardPanel.SetActive(false);
 
-        // Load saved best score
+        if (endGamePanel != null)
+            endGamePanel.SetActive(false);
+
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
+
         bestScore = PlayerPrefs.GetInt("BestScore", 0);
 
         UpdateScoreUI();
@@ -38,11 +49,18 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (!gameRunning) return;
+        if (SecondaryButtonPressedThisFrame())
+        {
+            TogglePause();
+        }
+
+        if (!gameRunning || isPaused)
+            return;
 
         timeLeft -= Time.deltaTime;
 
-        timerText.text = "Time: " + Mathf.CeilToInt(timeLeft).ToString();
+        if (timerText != null)
+            timerText.text = "Time: " + Mathf.CeilToInt(timeLeft).ToString();
 
         if (timeLeft <= 0f)
         {
@@ -50,18 +68,52 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    bool SecondaryButtonPressedThisFrame()
+    {
+        InputDevice rightHand = InputDevices.GetDeviceAtXRNode(XRNode.RightHand);
+
+        if (rightHand.TryGetFeatureValue(CommonUsages.secondaryButton, out bool pressed))
+        {
+            if (pressed && !lastSecondaryButtonState)
+            {
+                lastSecondaryButtonState = true;
+                return true;
+            }
+
+            lastSecondaryButtonState = pressed;
+        }
+        else
+        {
+            lastSecondaryButtonState = false;
+        }
+
+        return false;
+    }
+
     public void StartGame()
     {
         score = 0;
         timeLeft = roundDuration;
         gameRunning = true;
+        isPaused = false;
+        Time.timeScale = 1f;
 
-        scoreboardPanel.SetActive(true);
+        if (scoreboardPanel != null)
+            scoreboardPanel.SetActive(true);
+
+        if (endGamePanel != null)
+            endGamePanel.SetActive(false);
+
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
 
         if (audioSource && startSound)
             audioSource.PlayOneShot(startSound);
 
         UpdateScoreUI();
+
+        if (timerText != null)
+            timerText.text = "Time: " + Mathf.CeilToInt(timeLeft).ToString();
 
         Debug.Log("Game started");
     }
@@ -99,12 +151,47 @@ public class GameManager : MonoBehaviour
     public void EndGame()
     {
         gameRunning = false;
+        isPaused = false;
+        Time.timeScale = 1f;
 
-        timerText.text = "Time: 0";
+        if (timerText != null)
+            timerText.text = "Time: 0";
+
+        if (scoreboardPanel != null)
+            scoreboardPanel.SetActive(false);
+
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
+
+        if (endGamePanel != null)
+            endGamePanel.SetActive(true);
 
         if (audioSource && gameOverSound)
             audioSource.PlayOneShot(gameOverSound);
 
         Debug.Log("Game Over!");
+    }
+
+    public void TogglePause()
+    {
+        if (!gameRunning)
+            return;
+
+        isPaused = !isPaused;
+
+        if (pausePanel != null)
+            pausePanel.SetActive(isPaused);
+
+        Time.timeScale = isPaused ? 0f : 1f;
+    }
+
+    public void ResumeGame()
+    {
+        isPaused = false;
+
+        if (pausePanel != null)
+            pausePanel.SetActive(false);
+
+        Time.timeScale = 1f;
     }
 }

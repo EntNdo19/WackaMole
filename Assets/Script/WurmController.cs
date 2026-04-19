@@ -10,6 +10,9 @@ public class MoleSpawner : MonoBehaviour
     public float spawnInterval = 2f;
     public float moleLifetime = 4f;
 
+    [Header("Spawn Offset (Adjust in Inspector)")]
+    public Vector3 spawnOffset = new Vector3(0f, 0.3f, 0f);
+
     private GameManager gameManager;
 
     void Start()
@@ -26,6 +29,18 @@ public class MoleSpawner : MonoBehaviour
         // Start spawning moles repeatedly
         InvokeRepeating(nameof(SpawnMole), 1f, spawnInterval);
     }
+    
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Hammer"))
+        {
+            // add score
+            FindObjectOfType<GameManager>().AddScore(1);
+
+            // destroy mole
+            Destroy(gameObject);
+        }
+    }
 
     void SpawnMole()
     {
@@ -41,11 +56,15 @@ public class MoleSpawner : MonoBehaviour
         int randomIndex = Random.Range(0, spawnPoints.Length);
         Transform spawnPoint = spawnPoints[randomIndex];
 
-        // Instantiate mole
-        GameObject mole = Instantiate(molePrefab, spawnPoint.position, spawnPoint.rotation, spawnPoint);
+        // Instantiate mole with offset
+        GameObject mole = Instantiate(
+            molePrefab,
+            spawnPoint.position + spawnOffset,
+            spawnPoint.rotation
+        );
 
-        // Reset local position (optional)
-        mole.transform.localPosition = Vector3.zero;
+        // Fix scale
+        mole.transform.localScale = Vector3.one;
 
         // Activate mole script
         Mole moleScript = mole.GetComponent<Mole>();
@@ -64,7 +83,6 @@ public class MoleSpawner : MonoBehaviour
 
     bool IsGameRunning()
     {
-        // Using a public property in GameManager instead of reflection
         return gameManager != null && gameManager.gameRunning;
     }
 }

@@ -14,29 +14,28 @@ public class VRPauseMenu : MonoBehaviour
 
     void OnEnable()
     {
-        if (pauseAction.action != null)
-        {
-            pauseAction.action.performed -= OnPausePressed; // avoid double subscription
-            pauseAction.action.Enable();
-            pauseAction.action.performed += OnPausePressed;
-        }
-        else
+        if (pauseAction.action == null)
         {
             Debug.LogWarning("Pause Action is NOT assigned!");
+            return;
         }
+
+        pauseAction.action.Enable();
+        pauseAction.action.performed += OnPausePressed;
+        Debug.Log("Pause action enabled: " + pauseAction.action.name);
     }
 
     void OnDisable()
     {
-        if (pauseAction.action != null)
-        {
-            pauseAction.action.performed -= OnPausePressed;
-            pauseAction.action.Disable();
-        }
+        if (pauseAction.action == null) return;
+
+        pauseAction.action.performed -= OnPausePressed;
+        pauseAction.action.Disable();
     }
 
     private void OnPausePressed(InputAction.CallbackContext context)
     {
+        Debug.Log("Pause pressed!");
         TogglePause();
     }
 
@@ -50,7 +49,6 @@ public class VRPauseMenu : MonoBehaviour
 
     public void Pause()
     {
-        // Just activate the panel, no movement or scaling
         pauseMenuUI.SetActive(true);
         Time.timeScale = 0f;
         isPaused = true;
@@ -63,14 +61,15 @@ public class VRPauseMenu : MonoBehaviour
         isPaused = false;
     }
 
-    
     public void RestartGame()
     {
+        Time.timeScale = 1f;
         SceneManager.LoadScene("MainGame");
     }
-    
+
     public void QuitGame()
     {
+        Time.timeScale = 1f;
         SceneManager.LoadScene("StartGame");
     }
 }
